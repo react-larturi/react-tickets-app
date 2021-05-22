@@ -1,19 +1,23 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 
 import { Button, Col, Divider, Row, Typography } from 'antd';
 import { CloseCircleOutlined } from '@ant-design/icons';
 import { useHideMenu } from '../hooks/useHideMenu';
 import { getUsuarioStorage } from '../helpers/getUsuarioStorage';
 import { Redirect, useHistory } from 'react-router';
+import { SocketContext } from '../context/SocketContext';
 
 const { Title, Text } = Typography;
 
 export const Escritorio = () => {
 
-    const history = useHistory();
-
     useHideMenu(false);
+
+    const { socket } = useContext(SocketContext);
     const [ usuario ] = useState(getUsuarioStorage());
+    const [ ticket, setTicket ] = useState(null);
+
+    const history = useHistory();
 
     const salir = () => {
         localStorage.clear();
@@ -21,7 +25,9 @@ export const Escritorio = () => {
     };
 
     const siguienteTicket = () => {
-
+        socket.emit('atender-proximo-cliente', usuario, (ticket) => {
+            setTicket(ticket);
+        });
     };
 
     if (!usuario.agente || !usuario.escritorio) {
@@ -53,15 +59,22 @@ export const Escritorio = () => {
 
             <Divider />
 
-            <Row>
-                <Col>
-                    <Text>Estas atendiendo el ticket número: </Text>
-                    <Text 
-                        style={{ fontSize: 20 }}
-                        type="danger"
-                    >4</Text>
-                </Col>
-            </Row>
+            {
+                ticket && (
+
+                    <Row>
+                        <Col>
+                            <Text>Estas atendiendo el ticket número: </Text>
+                            <Text 
+                                style={{ fontSize: 20 }}
+                                type="danger"
+                            >{ticket.numero}</Text>
+                        </Col>
+                    </Row>
+                )
+            }
+
+            
 
             <Row>
                 <Col
